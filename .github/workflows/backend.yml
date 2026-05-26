@@ -6,7 +6,7 @@ on:
       - 'backend/**'
 
 env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/backend
+  IMAGE: ghcr.io/bmithunkumar/backend
   PROJECT_ID: qwiklabs-gcp-02-35b1b70eba41
   REGION: us-west1
 
