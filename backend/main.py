@@ -4,7 +4,7 @@ app = FastAPI()
 
 @app.get("/")
 def home():
-    return "This is home page and"
+    return "This is home page and new file"
 
 @app.get("/payment")
 def payment():
