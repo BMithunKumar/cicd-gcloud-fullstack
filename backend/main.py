@@ -8,7 +8,7 @@ def home():
 
 @app.get("/payment")
 def payment():
-    return "This is payment page"
+    return "This is payment page "
 
 
 @app.post("/calculation")

@@ -45,7 +45,7 @@ jobs:
 
       - name: Upload dist to GCS bucket
         run: |
-          gsutil -m rsync -r -d ./frontend/dist \
+          gsutil -m rsync -r -d ./frontend/build \
             gs://${{ env.BUCKET_NAME }}
 
       - name: Set public access on bucket
