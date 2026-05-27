@@ -8,9 +8,9 @@ on:
 
 env:
   PROJECT_ID: qwiklabs-gcp-02-c6810fdf6f3c
-  BUCKET_NAME:  frontend-bucket    # ← change this
+  BUCKET_NAME: bucket_frontend_staticfile_hosting
   REGION: us-east1
-  URL_MAP_NAME: my-balancer         # ← change this
+  URL_MAP_NAME: my-balancer
 
 jobs:
   deploy:
@@ -43,14 +43,9 @@ jobs:
           cd frontend
           npm run build
 
-      - name: Upload dist to GCS bucket
+      - name: Upload to GCS bucket
         run: |
           gsutil -m rsync -r -d ./frontend/build \
-            gs://${{ env.BUCKET_NAME }}
-
-      - name: Set public access on bucket
-        run: |
-          gsutil iam ch allUsers:objectViewer \
             gs://${{ env.BUCKET_NAME }}
 
       - name: Invalidate CDN cache
