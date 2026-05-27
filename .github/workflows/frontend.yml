@@ -43,11 +43,6 @@ jobs:
           cd frontend
           npm run build
 
-      - name: Create GCS bucket if not exists
-        run: |
-          gsutil ls gs://${{ env.BUCKET_NAME }} 2>/dev/null || \
-          gsutil mb -l ${{ env.REGION }} gs://${{ env.BUCKET_NAME }}
-
       - name: Enable website hosting on bucket
         run: |
           gsutil web set -m index.html -e index.html \
