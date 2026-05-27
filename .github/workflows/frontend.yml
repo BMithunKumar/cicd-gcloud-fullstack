@@ -43,11 +43,6 @@ jobs:
           cd frontend
           npm run build
 
-      - name: Enable website hosting on bucket
-        run: |
-          gsutil web set -m index.html -e index.html \
-            gs://${{ env.BUCKET_NAME }}
-
       - name: Upload dist to GCS bucket
         run: |
           gsutil -m rsync -r -d ./frontend/dist \
