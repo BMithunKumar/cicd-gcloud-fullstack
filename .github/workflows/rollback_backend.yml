@@ -12,9 +12,9 @@ on:
         default: 'false'
 
 env:
-  PROJECT_ID: qwiklabs-gcp-02-48c60767abb9
-  IMAGE: us-east4-docker.pkg.dev/qwiklabs-gcp-02-48c60767abb9/backend/backend
-  REGION: us-east4
+  PROJECT_ID: qwiklabs-gcp-02-c6810fdf6f3c
+  IMAGE: us-east1-docker.pkg.dev/qwiklabs-gcp-02-c6810fdf6f3c/backend/backend
+  REGION: us-east1
   SERVICE: backend
 
 jobs:
@@ -81,7 +81,7 @@ jobs:
 
       - name: Configure Docker for Artifact Registry
         run: |
-          gcloud auth configure-docker us-east4-docker.pkg.dev
+          gcloud auth configure-docker us-east1-docker.pkg.dev
 
       - name: Build the image
         run: docker build -t ${{ env.IMAGE }} ./backend
