@@ -1,0 +1,148 @@
+name: Backend CI/CD
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+    inputs:
+      rollback:
+        description: 'Set to true to manually rollback'
+        required: false
+        default: 'false'
+
+env:
+  PROJECT_ID: qwiklabs-gcp-02-48c60767abb9
+  IMAGE: us-east4-docker.pkg.dev/qwiklabs-gcp-02-48c60767abb9/backend/backend
+  REGION: us-east4
+  SERVICE: backend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout latest code
+        uses: actions/checkout@v3
+
+      - name: Login to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Manual Rollback
+        if: ${{ github.event.inputs.rollback == 'true' }}
+        run: |
+          echo "Rolling back to previous revision..."
+          PREVIOUS_REVISION=$(gcloud run revisions list \
+            --service=${{ env.SERVICE }} \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --format="value(name)" \
+            --sort-by="~creationTimestamp" \
+            --limit=2 | tail -n 1)
+
+          echo "Previous revision: $PREVIOUS_REVISION"
+
+          gcloud run services update-traffic ${{ env.SERVICE }} \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --to-revisions=$PREVIOUS_REVISION=100
+
+          echo "Rollback complete!"
+
+      - name: Stop if manual rollback
+        if: ${{ github.event.inputs.rollback == 'true' }}
+        run: exit 0
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          cd backend
+          pytest
+
+      - name: Create Artifact Registry repository
+        run: |
+          gcloud artifacts repositories create backend \
+            --repository-format=docker \
+            --location=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} || true
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker us-east4-docker.pkg.dev
+
+      - name: Build the image
+        run: docker build -t ${{ env.IMAGE }} ./backend
+
+      - name: Push image to Artifact Registry
+        run: docker push ${{ env.IMAGE }}
+
+      - name: Get current revision before deploy
+        id: get_revision
+        run: |
+          CURRENT=$(gcloud run services describe ${{ env.SERVICE }} \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --format="value(status.latestReadyRevisionName)" 2>/dev/null || echo "none")
+          echo "previous_revision=$CURRENT" >> $GITHUB_OUTPUT
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image ${{ env.IMAGE }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --project ${{ env.PROJECT_ID }} \
+            --allow-unauthenticated
+
+      - name: Health Check
+        id: health_check
+        run: |
+          URL=$(gcloud run services describe ${{ env.SERVICE }} \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --format="value(status.url)")
+
+          echo "Checking health at $URL/health ..."
+          sleep 5
+
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" $URL/health)
+          echo "Health check status: $STATUS"
+
+          if [ "$STATUS" != "200" ]; then
+            echo "Health check failed!"
+            echo "health_ok=false" >> $GITHUB_OUTPUT
+          else
+            echo "Health check passed!"
+            echo "health_ok=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Rollback if health check failed
+        if: steps.health_check.outputs.health_ok == 'false'
+        run: |
+          PREVIOUS="${{ steps.get_revision.outputs.previous_revision }}"
+          echo "Health check failed! Rolling back to: $PREVIOUS"
+
+          if [ "$PREVIOUS" != "none" ]; then
+            gcloud run services update-traffic ${{ env.SERVICE }} \
+              --region=${{ env.REGION }} \
+              --project=${{ env.PROJECT_ID }} \
+              --to-revisions=$PREVIOUS=100
+            echo "Rollback successful!"
+          else
+            echo "No previous revision found, cannot rollback."
+          fi
+
+          exit 1

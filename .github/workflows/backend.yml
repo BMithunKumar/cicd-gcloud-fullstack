@@ -3,7 +3,7 @@ name: Backend CI/CD
 on:
   push:
     paths:
-      - 'backend/**'
+      - 'backend/backend/**'
 
 env:
   PROJECT_ID: qwiklabs-gcp-02-48c60767abb9

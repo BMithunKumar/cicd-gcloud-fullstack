@@ -1,0 +1,71 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: qwiklabs-gcp-02-c6810fdf6f3c
+  BUCKET_NAME:  frontend-bucket    # ← change this
+  REGION: us-east1
+  URL_MAP_NAME: my-balancer         # ← change this
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Build React app
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Create GCS bucket if not exists
+        run: |
+          gsutil ls gs://${{ env.BUCKET_NAME }} 2>/dev/null || \
+          gsutil mb -l ${{ env.REGION }} gs://${{ env.BUCKET_NAME }}
+
+      - name: Enable website hosting on bucket
+        run: |
+          gsutil web set -m index.html -e index.html \
+            gs://${{ env.BUCKET_NAME }}
+
+      - name: Upload dist to GCS bucket
+        run: |
+          gsutil -m rsync -r -d ./frontend/dist \
+            gs://${{ env.BUCKET_NAME }}
+
+      - name: Set public access on bucket
+        run: |
+          gsutil iam ch allUsers:objectViewer \
+            gs://${{ env.BUCKET_NAME }}
+
+      - name: Invalidate CDN cache
+        run: |
+          gcloud compute url-maps invalidate-cdn-cache \
+            ${{ env.URL_MAP_NAME }} \
+            --path "/*" \
+            --project=${{ env.PROJECT_ID }}
