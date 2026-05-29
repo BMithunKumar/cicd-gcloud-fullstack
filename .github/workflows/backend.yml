@@ -41,19 +41,7 @@ jobs:
         run: |
           cd backend
           pytest
-      - name: Create Artifact Registry repository if not exists
-        run: |
-          if ! gcloud artifacts repositories describe backend \
-            --location=${{ env.REGION }} \
-            --project=${{ env.PROJECT_ID }} > /dev/null 2>&1; then
-            echo "Creating repository..."
-            gcloud artifacts repositories create backend \
-              --repository-format=docker \
-              --location=${{ env.REGION }} \
-              --project=${{ env.PROJECT_ID }}
-          else
-            echo "Repository already exists, skipping."
-          fi
+      
       - name: Configure Docker for Artifact Registry
         run: |
           gcloud auth configure-docker ${{ secrets.REGION }}-docker.pkg.dev
