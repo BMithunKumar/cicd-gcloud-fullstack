@@ -6,8 +6,8 @@ on:
       - 'backend/**'
 
 env:
-  PROJECT_ID: qwiklabs-gcp-02-48c60767abb9
-  IMAGE: us-west1-docker.pkg.dev/qwiklabs-gcp-02-48c60767abb9/backend/backend
+  PROJECT_ID: qwiklabs-gcp-03-596e21cf9aae
+  IMAGE: us-west1-docker.pkg.dev/qwiklabs-gcp-03-596e21cf9aae/backend/backend
   REGION: us-west1
 
 jobs:
