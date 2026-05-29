@@ -15,7 +15,7 @@ def calculation(a,b):
     return a+b
 
 
-@app.get("/health")
+@app.get
 def health():
     return {"status": "ok"}
 
