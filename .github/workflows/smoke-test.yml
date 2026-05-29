@@ -7,6 +7,12 @@ on:
     paths:
       - 'frontend/**'
       - 'backend/**'
+
+permissions:
+  pull-requests: write    # ← allows posting PR comments
+  issues: write
+
+ 
 jobs:
   smoke-test:
     runs-on: ubuntu-latest
