@@ -16,10 +16,8 @@ def calculation(a,b):
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
-
-
-
+    from fastapi.responses import JSONResponse
+    return JSONResponse(status_code=404, content={"status": "unhealthy"})
 
 
 
