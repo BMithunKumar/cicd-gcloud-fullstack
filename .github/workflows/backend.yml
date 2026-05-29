@@ -3,7 +3,7 @@ name: Backend CI/CD
 on:
   push:
     branches:
-      - master        # ← only deploy when merged to main
+      - main        # ← only deploy when merged to main
     paths:
       - 'backend/**'
 

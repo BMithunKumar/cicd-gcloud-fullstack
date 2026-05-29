@@ -2,6 +2,8 @@ name: Backend CI/CD with RollBack
 
 on:
   push:
+    branches:
+      - 'master'
     paths:
       - 'backend/backend/**'
   workflow_dispatch:
