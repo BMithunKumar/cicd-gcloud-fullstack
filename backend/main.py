@@ -10,6 +10,7 @@ def home():
 def payment():
     return "This is payment page "
 
+
 @app.post("/calculation")
 def calculation(a,b):
     return a+b
