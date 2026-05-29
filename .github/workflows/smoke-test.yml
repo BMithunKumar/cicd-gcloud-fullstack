@@ -3,7 +3,7 @@ name: Smoke Tests
 on:
   pull_request:
     branches:
-      - main          # ← only PRs targeting main
+      - master         # ← only PRs targeting main
     paths:
       - 'frontend/**'
       - 'backend/**'
