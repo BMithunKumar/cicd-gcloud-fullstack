@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECT_ID: qwiklabs-gcp-02-c6810fdf6f3c
-  BUCKET_NAME: bucket_frontend_staticfile_hosting
-  REGION: us-east1
+  PROJECT_ID: qwiklabs-gcp-03-596e21cf9aae
+  BUCKET_NAME: bucket_frontend_staticfile_hosting1
+  REGION: us-west1
   URL_MAP_NAME: my-balancer
 
 jobs:
